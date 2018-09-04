@@ -1,32 +1,19 @@
 
-// macro system for players to create unit actions and order them.  start players off with default actions and let them gain new verbs/nouns?
-
 let circles = [];
 
 window.onload = () => {
     const canvas = document.getElementById('myCanvas');
     const context = canvas.getContext('2d');
 
-    canvas.onclick = event => {
-        const pos = getCursorPosition(canvas, event);
-        const found = circles.find(circle => {
-            return isInsideCircle(pos.x, pos.y, circle);
-        });
-
-        if (found) {
-            context.fillStyle = 'green';
-            drawCircle(context, found);
-        } else {
-            const circle = { x: pos.x, y: pos.y, radius: 25 };
+    const camp = camps.createGoblinCamp();
+    const circle = { x: camp.coordinates.x, y: camp.coordinates.y, radius: 25 };
             
-            context.fillStyle = 'black';
-            drawCircle(context, circle); 
-            circle.mobs = [ mobs.createSmallGoblin(), mobs.createGoblin(), mobs.createLargeGoblin() ];
-            circle.units = [ units.warrior, units.priest, units.rogue ];
+    context.fillStyle = 'black';
+    drawCircle(context, circle); 
+    circle.units = [ units.warrior, units.priest, units.rogue ];
+    circle.camp = camp;
 
-            circles.push(circle);
-        }
-    };
+    circles.push(circle);
 
     requestAnimationFrame(mainLoop);
 };
@@ -36,10 +23,11 @@ function mainLoop() {
     let duration = Date.now() - time;
 
     circles.forEach(circle => {
-        circle.mobs.forEach(mob => takeTurn(duration, mob, circle.units, circle.mobs))
-        circle.units = circle.units.filter(unit => unit.hp > 0)
-        circle.units.forEach(unit => takeTurn(duration, unit, circle.mobs, circle.units))
-        circle.mobs = circle.mobs.filter(mob => mob.hp > 0)
+        circle.camp.spawns.forEach(spawn => spawn.trySpawn(duration));
+        circle.camp.mobs.forEach(mob => takeTurn(duration, mob, circle.units, circle.camp.mobs))
+        circle.units = circle.units.filter(unit => !unit.isDead)
+        circle.units.forEach(unit => takeTurn(duration, unit, circle.camp.mobs, circle.units))
+        circle.camp.spawns.forEach(spawn => spawn.tryKill());
     })
     
     time = Date.now();

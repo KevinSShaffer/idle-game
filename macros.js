@@ -4,7 +4,7 @@ function basicAttack(self, enemies, allies) {
 
     if (unit) {
         console.log(`${self.name} deals ${self.atk} damage to ${unit.name}`);
-        unit.hp -= self.atk;
+        unit.takeDamage(self.atk);
     }
 }
 
